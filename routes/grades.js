@@ -1,4 +1,4 @@
-let {Grade, Student, Course} = require('../model/schemas');
+let { Grade, Student, Course } = require('../model/schemas');
 
 function getAll(req, res) {
     Grade.find()
@@ -7,31 +7,40 @@ function getAll(req, res) {
         .then((grades) => {
             res.send(grades);
         }).catch((err) => {
-        res.send(err);
-    });
+            res.send(err);
+        });
 }
 
 
 function create(req, res) {
-    let grade = new Grade();
+    if (!Array.isArray(req.body)) {
+        return res.status(400).send('Body should be an array of grade objects');
+    }
 
-    grade.student = req.body.student;
-    grade.course = req.body.course;
-    grade.grade = req.body.grade;
-    grade.date = req.body.date;
+    const gradePromises = req.body.map(gradeData => {
+        let grade = new Grade();
 
-    grade.save()
-        .then((grade) => {
-                res.json({message: `grade saved with id ${grade.id}!`});
-            }
-        ).catch((err) => {
-        console.log(err);
-        res.status(400).send('cant post grade ', err.message);
+        grade.student = gradeData.student;
+        grade.course = gradeData.course;
+        grade.grade = gradeData.grade;
+        grade.date = new Date(gradeData.date);
+
+        return grade.save();
     });
+
+    Promise.all(gradePromises)
+        .then((grades) => {
+            const gradeIds = grades.map(grade => grade.id);
+            res.json({ message: `Grades saved with ids ${gradeIds.join(', ')}!` });
+        })
+        .catch((err) => {
+            console.log(err);
+            res.status(400).send('Cant post grades: ' + err.message);
+        });
 }
 
 function deleteGrade(req, res) {
-    const {id} = req.params;
+    const { id } = req.params;
 
     Grade.findByIdAndDelete(id)
         .then((grade) => {
@@ -44,7 +53,7 @@ function deleteGrade(req, res) {
 }
 
 function update(req, res) {
-    const {id} = req.params;
+    const { id } = req.params;
 
     Grade.findByIdAndUpdate(id, {
         student: req.body.student,
@@ -61,4 +70,4 @@ function update(req, res) {
         });
 }
 
-module.exports = {getAll, create, update, deleteGrade};
+module.exports = { getAll, create, update, deleteGrade };
