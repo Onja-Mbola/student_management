@@ -66,6 +66,10 @@ app.route(prefix + '/grades')
     .get(grade.getAll)    
     .post(grade.create);   
 
+app.route(prefix + '/grades/:id')
+    .put(grade.update)    
+    .delete(grade.deleteGrade);
+
 app.listen(port, "0.0.0.0", () => {
     console.log('Serveur démarré sur http://localhost:' + port);
 });
